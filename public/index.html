@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CLMS Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="login-section">
+  <div class="login-form">
+    <h2>Login to CLMS</h2>
+    <input id="username" type="text" placeholder="Username" value="user">
+    <input id="password" type="password" placeholder="Password" value="user">
+    <button id="loginBtn">Login</button>
+    <p id="login-error" style="color:red;"></p>
+  </div>
+</div>
+<div class="container" id="main-app" style="display:none;">
+  <aside class="sidebar">
+    <div class="logo">LOGO</div>
+    <nav>
+      <ul>
+        <li id="dashboard-tab" class="active">Dashboard</li>
+        <li id="computers-tab">Computers</li>
+        <li id="logs-tab">Logs</li>
+        <li id="schedule-tab">Maintenance Schedule</li>
+        <li id="users-tab">User Management</li>
+        <li id="logout-tab">Logout</li>
+      </ul>
+    </nav>
+  </aside>
+  <main class="main-content">
+    <section id="dashboard-section">
+      <h1>Dashboard</h1>
+      <div class="stats-grid">
+        <div class="card"><div class="icon">&#128187;</div><div>Total Computers<br><span id="stat-total">0</span></div></div>
+        <div class="card"><div class="icon">&#9881;</div><div>Under Maintenance<br><span id="stat-maintain">0</span></div></div>
+        <div class="card"><div class="icon">&#128101;</div><div>Active<br><span id="stat-online">0</span></div></div>
+        <div class="card"><div class="icon">&#9899;</div><div>Offline<br><span id="stat-offline">0</span></div></div>
+      </div>
+    </section>
+    <section id="computers-section" style="display:none;">
+      <h1>Computers</h1>
+      <button class="add-computer" id="showAddForm">+ Add Computer</button>
+      <div id="addForm" style="display:none; margin-bottom:15px; background:#fff; padding:16px; border-radius:8px;">
+        <input id="name" placeholder="PC Name">
+        <input id="ip" placeholder="IP (leave empty for auto-generate)">
+        <input id="mac" placeholder="MAC (leave empty for auto-generate)">
+        <input id="location" placeholder="Location">
+        <select id="status">
+          <option value="online">Online</option>
+          <option value="offline">Offline</option>
+          <option value="under-maintenance">Under Maintenance</option>
+        </select>
+        <button id="addBtn">Add</button>
+        <button id="cancelAdd">Cancel</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>PC Name</th>
+            <th>IP</th>
+            <th>MAC</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Logs Count</th>
+            <th>Next Maintenance</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="computers-tbody"></tbody>
+      </table>
+    </section>
+    <section id="logs-section" style="display:none;">
+      <h1>Maintenance Logs</h1>
+      <button class="add-computer" id="showAddLogForm">+ Add Log</button>
+      <div id="addLogForm" style="display:none; margin-bottom:15px; background:#fff; padding:16px; border-radius:8px;">
+        <select id="log-computer-id"></select>
+        <input id="log-date" type="date">
+        <input id="log-description" placeholder="Description">
+        <button id="addLogBtn">Add Log</button>
+        <button id="cancelAddLog">Cancel</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Computer</th>
+            <th>Date</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody id="logs-tbody"></tbody>
+      </table>
+    </section>
+    <section id="schedule-section" style="display:none;">
+      <h1>Maintenance Schedule</h1>
+      <button class="add-computer" id="showAddScheduleForm">+ Add Schedule</button>
+      <div id="addScheduleForm" style="display:none; margin-bottom:15px; background:#fff; padding:16px; border-radius:8px;">
+        <select id="schedule-computer-id"></select>
+        <input id="schedule-date" type="date">
+        <input id="schedule-task" placeholder="Task">
+        <button id="addScheduleBtn">Add Schedule</button>
+        <button id="cancelAddSchedule">Cancel</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Computer</th>
+            <th>Scheduled Date</th>
+            <th>Task</th>
+          </tr>
+        </thead>
+        <tbody id="schedule-tbody"></tbody>
+      </table>
+    </section>
+    <section id="users-section" style="display:none;">
+      <h1>User Management</h1>
+      <button class="add-computer" id="showAddUserForm">+ Add User</button>
+      <div id="addUserForm" style="display:none; margin-bottom:15px; background:#fff; padding:16px; border-radius:8px;">
+        <input id="user-username" placeholder="Username">
+        <input id="user-password" type="password" placeholder="Password">
+        <button id="addUserBtn">Add User</button>
+        <button id="cancelAddUser">Cancel</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
