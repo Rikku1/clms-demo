@@ -5,5 +5,24 @@
     "express-session": "^1.18.2",
     "ping": "^1.0.0",
     "sqlite3": "^5.1.7"
-  }
+  },
+  "name": "clms-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "backend.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rikku1/clms-demo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Rikku1/clms-demo/issues"
+  },
+  "homepage": "https://github.com/Rikku1/clms-demo#readme"
 }
