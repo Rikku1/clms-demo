@@ -47,6 +47,16 @@ db.serialize(() => {
     FOREIGN KEY (computer_id) REFERENCES computers(id)
   )`);
 
+  db.run(`CREATE TABLE IF NOT EXISTS peripherals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    computer_id INTEGER,
+    name TEXT,
+    type TEXT,
+    status TEXT,
+    last_seen TEXT,
+    FOREIGN KEY (computer_id) REFERENCES computers(id)
+  )`);
+
   // Insert default user if not exists
   db.run(`INSERT OR IGNORE INTO users (username, password) VALUES ('user', 'user')`, (err) => {
     if (err) console.error('Error inserting default user:', err);
@@ -231,9 +241,15 @@ app.post('/api/computers', requireAuth, (req, res) => {
 
 // Delete computer
 app.delete('/api/computers/:id', requireAuth, (req, res) => {
-  db.run('DELETE FROM computers WHERE id = ?', [req.params.id], function(err) {
-    if (err) res.status(500).json({ error: err.message });
-    else res.json({ deleted: this.changes });
+  // First delete associated peripherals
+  db.run('DELETE FROM peripherals WHERE computer_id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    // Then delete the computer
+    db.run('DELETE FROM computers WHERE id = ?', [req.params.id], function(err) {
+      if (err) res.status(500).json({ error: err.message });
+      else res.json({ deleted: this.changes });
+    });
   });
 });
 
@@ -324,6 +340,56 @@ app.post('/api/users', requireAuth, (req, res) => {
 
 app.delete('/api/users/:id', requireAuth, (req, res) => {
   db.run('DELETE FROM users WHERE id = ?', [req.params.id], function(err) {
+    if (err) res.status(500).json({ error: err.message });
+    else res.json({ deleted: this.changes });
+  });
+});
+
+// Peripherals
+app.get('/api/peripherals', requireAuth, (req, res) => {
+  let query = `
+    SELECT p.id, p.computer_id, c.name as computer_name, p.name, p.type, p.status, p.last_seen
+    FROM peripherals p
+    JOIN computers c ON p.computer_id = c.id
+  `;
+  const params = [];
+  if (req.query.computer_id) {
+    query += ' WHERE p.computer_id = ?';
+    params.push(req.query.computer_id);
+  }
+  query += ' ORDER BY p.last_seen DESC';
+  db.all(query, params, (err, rows) => {
+    if (err) res.status(500).json({ error: err.message });
+    else res.json(rows);
+  });
+});
+
+app.post('/api/peripherals', requireAuth, (req, res) => {
+  const { computer_id, name, type, status, last_seen } = req.body;
+  db.run(
+    'INSERT INTO peripherals (computer_id, name, type, status, last_seen) VALUES (?, ?, ?, ?, ?)',
+    [computer_id, name, type, status, last_seen],
+    function(err) {
+      if (err) res.status(500).json({ error: err.message });
+      else res.json({ id: this.lastID });
+    }
+  );
+});
+
+app.put('/api/peripherals/:id', requireAuth, (req, res) => {
+  const { computer_id, name, type, status, last_seen } = req.body;
+  db.run(
+    'UPDATE peripherals SET computer_id = ?, name = ?, type = ?, status = ?, last_seen = ? WHERE id = ?',
+    [computer_id, name, type, status, last_seen, req.params.id],
+    function(err) {
+      if (err) res.status(500).json({ error: err.message });
+      else res.json({ updated: this.changes });
+    }
+  );
+});
+
+app.delete('/api/peripherals/:id', requireAuth, (req, res) => {
+  db.run('DELETE FROM peripherals WHERE id = ?', [req.params.id], function(err) {
     if (err) res.status(500).json({ error: err.message });
     else res.json({ deleted: this.changes });
   });

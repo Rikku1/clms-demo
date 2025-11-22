@@ -18,7 +18,7 @@
 </div>
 <div class="container" id="main-app" style="display:none;">
   <aside class="sidebar">
-    <div class="logo">LOGO</div>
+    <div class="logo">ComLogs</div>
     <nav>
       <ul>
         <li id="dashboard-tab" class="active">Dashboard</li>
@@ -112,6 +112,41 @@
           </tr>
         </thead>
         <tbody id="schedule-tbody"></tbody>
+      </table>
+    </section>
+    <section id="peripherals-section" style="display:none;">
+      <h1>Peripherals</h1>
+      <button class="add-computer" id="showAddPeripheralForm">+ Add Peripheral</button>
+      <div id="addPeripheralForm" style="display:none; margin-bottom:15px; background:#fff; padding:16px; border-radius:8px;">
+        <select id="peripheral-computer-id"></select>
+        <input id="peripheral-name" placeholder="Peripheral Name">
+        <select id="peripheral-type">
+          <option value="USB">USB</option>
+          <option value="Printer">Printer</option>
+          <option value="Monitor">Monitor</option>
+          <option value="Keyboard">Keyboard</option>
+          <option value="Mouse">Mouse</option>
+          <option value="Other">Other</option>
+        </select>
+        <select id="peripheral-status">
+          <option value="connected">Connected</option>
+          <option value="disconnected">Disconnected</option>
+        </select>
+        <button id="addPeripheralBtn">Add Peripheral</button>
+        <button id="cancelAddPeripheral">Cancel</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Computer</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Last Seen</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="peripherals-tbody"></tbody>
       </table>
     </section>
     <section id="users-section" style="display:none;">

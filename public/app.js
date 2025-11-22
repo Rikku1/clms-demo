@@ -63,24 +63,89 @@ function renderComputers(list) {
   const tbody = document.getElementById('computers-tbody');
   tbody.innerHTML = '';
   list.forEach(c => {
-    const nextMaint = c.next_maintenance ? new Date(c.next_maintenance).toLocaleDateString() : 'None';
     const row = document.createElement('tr');
+    row.classList.add('computer-row');
     row.innerHTML = `
       <td>${c.name}</td>
-      <td>${c.ip}</td>
-      <td>${c.mac}</td>
-      <td>${c.location}</td>
       <td><span class="status ${c.status}">${c.status.replace(/-/g, ' ').charAt(0).toUpperCase() + c.status.replace(/-/g, ' ').slice(1)}</span></td>
-      <td>${c.log_count || 0}</td>
-      <td>${nextMaint}</td>
-      <td>
-        <button onclick="viewLogs(${c.id})">Logs</button>
-        <button onclick="viewSchedule(${c.id})">Schedule</button>
-        <button onclick="deleteComputer(${c.id})">Delete</button>
-      </td>
     `;
+    row.addEventListener('click', () => toggleComputerDetails(c));
     tbody.appendChild(row);
   });
+}
+
+function toggleComputerDetails(computer) {
+  const tbody = document.getElementById('computers-tbody');
+  let detailsRow = tbody.querySelector(`.computer-details[data-computer-id="${computer.id}"]`);
+
+  if (detailsRow) {
+    // If details are already shown, hide them
+    detailsRow.remove();
+  } else {
+    // Hide any other open details
+    tbody.querySelectorAll('.computer-details').forEach(row => row.remove());
+
+    // Create and show details row
+    detailsRow = document.createElement('tr');
+    detailsRow.classList.add('computer-details');
+    detailsRow.setAttribute('data-computer-id', computer.id);
+
+    const nextMaint = computer.next_maintenance ? new Date(computer.next_maintenance).toLocaleDateString() : 'None';
+
+    detailsRow.innerHTML = `
+      <td colspan="2">
+        <div class="computer-details-content">
+          <div class="computer-info">
+            <h3>Computer Details</h3>
+            <p><strong>IP:</strong> ${computer.ip}</p>
+            <p><strong>MAC:</strong> ${computer.mac}</p>
+            <p><strong>Location:</strong> ${computer.location}</p>
+            <p><strong>Logs Count:</strong> ${computer.log_count || 0}</p>
+            <p><strong>Next Maintenance:</strong> ${nextMaint}</p>
+            <div class="computer-actions">
+              <button onclick="viewLogs(${computer.id})">View Logs</button>
+              <button onclick="viewSchedule(${computer.id})">View Schedule</button>
+              <button onclick="deleteComputer(${computer.id})">Delete Computer</button>
+            </div>
+          </div>
+          <div class="peripherals-section">
+            <h3>Connected Peripherals</h3>
+            <div id="peripherals-${computer.id}" class="peripherals-list">
+              <p>Loading peripherals...</p>
+            </div>
+          </div>
+        </div>
+      </td>
+    `;
+
+    // Insert after the computer row
+    const computerRow = tbody.querySelector(`.computer-row`);
+    computerRow.insertAdjacentElement('afterend', detailsRow);
+
+    // Fetch and display peripherals
+    fetch(`/api/peripherals?computer_id=${computer.id}`)
+      .then(res => res.json())
+      .then(peripherals => {
+        const peripheralsDiv = document.getElementById(`peripherals-${computer.id}`);
+        if (peripherals.length === 0) {
+          peripheralsDiv.innerHTML = '<p>No peripherals connected.</p>';
+        } else {
+          peripheralsDiv.innerHTML = peripherals.map(p => `
+            <div class="peripheral-item">
+              <span class="peripheral-name">${p.name}</span>
+              <span class="peripheral-type">${p.type}</span>
+              <span class="peripheral-status ${p.status}">${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>
+              <span class="peripheral-last-seen">Last seen: ${p.last_seen ? new Date(p.last_seen).toLocaleString() : 'Never'}</span>
+            </div>
+          `).join('');
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching peripherals:', err);
+        const peripheralsDiv = document.getElementById(`peripherals-${computer.id}`);
+        peripheralsDiv.innerHTML = '<p>Error loading peripherals.</p>';
+      });
+  }
 }
 // Add computer show/hide form
 document.getElementById('showAddForm').onclick = () => {
@@ -262,6 +327,79 @@ document.getElementById('addScheduleBtn').onclick = function() {
       document.getElementById('schedule-date').value = '';
       document.getElementById('schedule-task').value = '';
     });
+};
+
+// Peripherals logic
+function fetchPeripherals() {
+  fetch('/api/peripherals')
+    .then(res => res.json())
+    .then(renderPeripherals);
+}
+function renderPeripherals(list) {
+  const tbody = document.getElementById('peripherals-tbody');
+  tbody.innerHTML = '';
+  list.forEach(p => {
+    const lastSeen = p.last_seen ? new Date(p.last_seen).toLocaleString() : 'Never';
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${p.computer_name}</td>
+      <td>${p.name}</td>
+      <td>${p.type}</td>
+      <td><span class="status ${p.status}">${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span></td>
+      <td>${lastSeen}</td>
+      <td>
+        <button onclick="deletePeripheral(${p.id})">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+// Add peripheral show/hide form
+document.getElementById('showAddPeripheralForm').onclick = () => {
+  fetch('/api/computers').then(res => res.json()).then(computers => {
+    const select = document.getElementById('peripheral-computer-id');
+    select.innerHTML = '';
+    computers.forEach(c => {
+      const option = document.createElement('option');
+      option.value = c.id;
+      option.textContent = c.name;
+      select.appendChild(option);
+    });
+  });
+  document.getElementById('addPeripheralForm').style.display = 'block';
+};
+document.getElementById('cancelAddPeripheral').onclick = () => {
+  document.getElementById('addPeripheralForm').style.display = 'none';
+};
+// Add a peripheral
+document.getElementById('addPeripheralBtn').onclick = function() {
+  const body = {
+    computer_id: document.getElementById('peripheral-computer-id').value,
+    name: document.getElementById('peripheral-name').value,
+    type: document.getElementById('peripheral-type').value,
+    status: document.getElementById('peripheral-status').value,
+    last_seen: new Date().toISOString()
+  };
+  fetch('/api/peripherals', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  })
+    .then(res => res.json())
+    .then(() => {
+      fetchPeripherals();
+      document.getElementById('addPeripheralForm').style.display = 'none';
+      document.getElementById('peripheral-name').value = '';
+      document.getElementById('peripheral-type').value = 'USB';
+      document.getElementById('peripheral-status').value = 'connected';
+    });
+};
+// Global deletePeripheral function for the table
+window.deletePeripheral = function(id) {
+  if(!confirm('Delete this peripheral?')) return;
+  fetch('/api/peripherals/' + id, {method: 'DELETE'})
+    .then(res => res.json())
+    .then(fetchPeripherals);
 };
 
 // Users logic
